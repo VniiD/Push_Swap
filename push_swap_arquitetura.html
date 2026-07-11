@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<title>push_swap — Arquitetura do Projeto</title>
+<style>
+:root{
+  --bg:#12151c;
+  --bg-panel:#1a1f29;
+  --bg-panel-2:#20273347;
+  --line:#2b3242;
+  --text:#EDEAE3;
+  --text-dim:#9aa2b1;
+  --gold:#E8A33D;   /* pilha A */
+  --teal:#3DBFAE;   /* pilha B */
+  --red:#E2604F;    /* erro / alerta */
+  --mono:'JetBrains Mono','Fira Code',ui-monospace,SFMono-Regular,Consolas,monospace;
+  --sans:'Inter','IBM Plex Sans',ui-sans-serif,system-ui,-apple-system,sans-serif;
+}
+*{box-sizing:border-box;}
+html,body{margin:0;padding:0;background:var(--bg);color:var(--text);font-family:var(--sans);}
+body{padding:0 0 80px 0;}
+.wrap{max-width:1180px;margin:0 auto;padding:0 32px;}
+
+/* HERO */
+.hero{
+  padding:90px 0 60px 0;
+  border-bottom:1px solid var(--line);
+  position:relative;
+  overflow:hidden;
+}
+.hero .wrap{display:flex;align-items:center;gap:56px;flex-wrap:wrap;}
+.hero-text{flex:1 1 420px;}
+.eyebrow{
+  font-family:var(--mono);font-size:12.5px;letter-spacing:.14em;text-transform:uppercase;
+  color:var(--gold);margin-bottom:18px;display:flex;align-items:center;gap:10px;
+}
+.eyebrow::before{content:"";width:22px;height:1px;background:var(--gold);display:inline-block;}
+h1{
+  font-family:var(--mono);font-size:44px;line-height:1.12;margin:0 0 18px 0;font-weight:700;
+  letter-spacing:-.01em;
+}
+h1 span{color:var(--teal);}
+.hero p.lead{font-size:17px;line-height:1.65;color:var(--text-dim);max-width:520px;margin:0;}
+.hero-visual{flex:0 0 380px;}
+
+/* stack signature graphic */
+.stacksvg text{font-family:var(--mono);}
+
+/* SECTION shell */
+section{padding:64px 0;border-bottom:1px solid var(--line);}
+section:last-of-type{border-bottom:none;}
+.section-head{display:flex;align-items:baseline;gap:16px;margin-bottom:8px;}
+.section-num{font-family:var(--mono);color:var(--text-dim);font-size:13px;}
+h2{font-family:var(--mono);font-size:26px;margin:0;font-weight:700;}
+.section-sub{color:var(--text-dim);font-size:15.5px;line-height:1.6;max-width:760px;margin:14px 0 36px 0;}
+
+/* panels holding diagrams */
+.panel{
+  background:var(--bg-panel);border:1px solid var(--line);border-radius:10px;
+  padding:28px;margin:24px 0;overflow-x:auto;
+}
+.panel svg{display:block;margin:0 auto;max-width:100%;height:auto;}
+figcaption{font-family:var(--mono);font-size:12px;color:var(--text-dim);text-align:center;margin-top:14px;}
+
+/* prose */
+p{line-height:1.7;color:#d8d5cd;font-size:15.5px;}
+strong{color:var(--text);}
+.callout{
+  border-left:3px solid var(--gold);background:var(--bg-panel);padding:16px 20px;
+  border-radius:0 8px 8px 0;font-size:14.5px;color:var(--text-dim);margin:20px 0;
+}
+.callout b{color:var(--gold);}
+.callout.alert{border-left-color:var(--red);}
+.callout.alert b{color:var(--red);}
+
+/* tables */
+table{width:100%;border-collapse:collapse;font-size:14.5px;margin:20px 0;}
+th,td{text-align:left;padding:12px 14px;border-bottom:1px solid var(--line);vertical-align:top;}
+th{font-family:var(--mono);font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--gold);font-weight:600;}
+td code, th code{font-family:var(--mono);background:#232a38;padding:2px 7px;border-radius:5px;font-size:13px;color:var(--teal);white-space:nowrap;}
+tr:last-child td{border-bottom:none;}
+tr:hover{background:#181d27;}
+
+/* grid of file cards */
+.filegrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin:24px 0;}
+.filecard{background:var(--bg-panel);border:1px solid var(--line);border-radius:9px;padding:16px 18px;}
+.filecard .fname{font-family:var(--mono);color:var(--teal);font-size:13.5px;font-weight:600;}
+.filecard .fdesc{font-size:13px;color:var(--text-dim);margin-top:6px;line-height:1.5;}
+
+/* legend */
+.legend{display:flex;gap:24px;flex-wrap:wrap;margin:18px 0 0 0;font-family:var(--mono);font-size:12px;color:var(--text-dim);}
+.legend span{display:inline-flex;align-items:center;gap:8px;}
+.dot{width:10px;height:10px;border-radius:3px;display:inline-block;}
+
+footer{text-align:center;padding:50px 0 0 0;color:var(--text-dim);font-family:var(--mono);font-size:12px;}
+</style>
+</head>
+<body>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="hero-text">
+      <div class="eyebrow">Documentação de Arquitetura</div>
+      <h1>push_swap<br><span>como duas pilhas aprendem a se ordenar</span></h1>
+      <p class="lead">Um programa em C que recebe uma lista de números desordenados e a organiza usando apenas duas pilhas (A e B) e um conjunto restrito de movimentos — trocar, rodar, empurrar. Este documento explica, em camadas visuais, como cada arquivo do projeto contribui para essa tarefa.</p>
+    </div>
+    <div class="hero-visual">
+      <svg class="stacksvg" viewBox="0 0 380 300" xmlns="http://www.w3.org/2000/svg">
+        <!-- stack A -->
+        <text x="70" y="24" fill="#9aa2b1" font-size="12" text-anchor="middle">PILHA A</text>
+        <g>
+          <rect x="20" y="35" width="100" height="34" rx="6" fill="none" stroke="#E8A33D" stroke-width="2"/>
+          <text x="70" y="57" fill="#E8A33D" font-size="15" text-anchor="middle" font-weight="700">8</text>
+          <rect x="20" y="73" width="100" height="34" rx="6" fill="none" stroke="#E8A33D" stroke-width="2" opacity="0.85"/>
+          <text x="70" y="95" fill="#E8A33D" font-size="15" text-anchor="middle" opacity="0.85">3</text>
+          <rect x="20" y="111" width="100" height="34" rx="6" fill="none" stroke="#E8A33D" stroke-width="2" opacity="0.6"/>
+          <text x="70" y="133" fill="#E8A33D" font-size="15" text-anchor="middle" opacity="0.6">5</text>
+          <rect x="20" y="149" width="100" height="34" rx="6" fill="none" stroke="#E8A33D" stroke-width="2" opacity="0.4"/>
+          <text x="70" y="171" fill="#E8A33D" font-size="15" text-anchor="middle" opacity="0.4">1</text>
+        </g>
+        <!-- arrows -->
+        <g stroke="#9aa2b1" stroke-width="1.4" fill="none">
+          <path d="M130 52 H 190" marker-end="url(#arrow)"/>
+          <text x="160" y="45" fill="#9aa2b1" font-size="10" text-anchor="middle" font-family="monospace">pb</text>
+          <path d="M190 210 H 130" marker-end="url(#arrow)"/>
+          <text x="160" y="203" fill="#9aa2b1" font-size="10" text-anchor="middle" font-family="monospace">pa</text>
+        </g>
+        <!-- stack B -->
+        <text x="250" y="200" fill="#9aa2b1" font-size="12" text-anchor="middle">PILHA B</text>
+        <g>
+          <rect x="200" y="211" width="100" height="34" rx="6" fill="none" stroke="#3DBFAE" stroke-width="2"/>
+          <text x="250" y="233" fill="#3DBFAE" font-size="15" text-anchor="middle" font-weight="700">2</text>
+          <rect x="200" y="249" width="100" height="34" rx="6" fill="none" stroke="#3DBFAE" stroke-width="2" opacity="0.6"/>
+          <text x="250" y="271" fill="#3DBFAE" font-size="15" text-anchor="middle" opacity="0.6">9</text>
+        </g>
+        <defs>
+          <marker id="arrow" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+            <path d="M0,0 L6,3 L0,6 Z" fill="#9aa2b1"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+  </div>
+</div>
+
+<div class="wrap">
+
+<!-- 1. RESUMO EM LINGUAGEM SIMPLES -->
+<section>
+  <div class="section-head"><span class="section-num">01</span><h2>O que este programa faz, em linguagem simples</h2></div>
+  <p class="section-sub">Sem termos técnicos: imagine duas pilhas de cartas na mesa.</p>
+  <p>Você entrega ao programa uma lista de números embaralhados, por exemplo <code style="font-family:var(--mono);color:var(--teal)">4 67 3 87 23</code>. Esses números viram uma <strong>pilha de cartas (Pilha A)</strong>. O programa só pode mexer nas cartas de quatro formas: <strong>trocar</strong> as duas do topo, <strong>girar</strong> a pilha para cima ou para baixo, e <strong>empurrar</strong> a carta do topo para a outra pilha (Pilha B) ou trazê-la de volta. Usando só esses movimentos — na ordem certa — ele reorganiza os números do menor para o maior na Pilha A, e imprime cada movimento feito, um por linha, no terminal.</p>
+  <p>A parte inteligente do projeto é <strong>escolher a estratégia certa conforme o tamanho da lista</strong>: poucos números pedem uma solução direta; muitos números pedem um método mais elaborado para não desperdiçar movimentos.</p>
+</section>
+
+<!-- 2. MAPA DE ARQUIVOS -->
+<section>
+  <div class="section-head"><span class="section-num">02</span><h2>Mapa dos arquivos do projeto</h2></div>
+  <p class="section-sub">Cada arquivo <code style="font-family:var(--mono);color:var(--teal)">.c</code> tem uma responsabilidade única. <code style="font-family:var(--mono);color:var(--teal)">push_swap.h</code> é o "contrato": declara todas as funções para que os arquivos possam se enxergar.</p>
+  <div class="filegrid">
+    <div class="filecard"><div class="fname">main.c</div><div class="fdesc">Ponto de entrada. Lê os argumentos, decide se já está ordenado e escolhe a estratégia de ordenação pelo tamanho.</div></div>
+    <div class="filecard"><div class="fname">parser.c</div><div class="fdesc">Converte texto em números (com validação de overflow) e detecta duplicados.</div></div>
+    <div class="filecard"><div class="fname">stack_utils.c</div><div class="fdesc">Cria nós, monta a lista circular, libera a memória no final.</div></div>
+    <div class="filecard"><div class="fname">indexer.c</div><div class="fdesc">Atribui a cada valor um "índice" — sua posição relativa se a pilha estivesse ordenada (0 = menor, N-1 = maior).</div></div>
+    <div class="filecard"><div class="fname">disorder_metric.c</div><div class="fdesc">Calcula quantas "inversões" (pares fora de ordem) existem na pilha. Contém também <code style="font-family:var(--mono);color:var(--teal)">get_stack_size</code>, usada por todo o projeto.</div></div>
+    <div class="filecard"><div class="fname">math_utils.c</div><div class="fdesc">Uma raiz quadrada inteira própria, usada para dimensionar os "blocos" dos algoritmos médio/complexo.</div></div>
+    <div class="filecard"><div class="fname">op_swap_push.c</div><div class="fdesc">Implementa de fato o "trocar" (swap) e o "empurrar" (push) entre pilhas, mexendo nos ponteiros da lista.</div></div>
+    <div class="filecard"><div class="fname">op_rotate.c</div><div class="fdesc">Implementa "girar" a pilha para cima (rotate) e para baixo (reverse rotate).</div></div>
+    <div class="filecard"><div class="fname">op_wrappers_a.c / b.c</div><div class="fdesc">Camada fina que chama as operações acima e imprime o nome do comando executado (<code style="font-family:var(--mono);color:var(--teal)">sa</code>, <code style="font-family:var(--mono);color:var(--teal)">ra</code>, <code style="font-family:var(--mono);color:var(--teal)">pb</code>...).</div></div>
+    <div class="filecard"><div class="fname">simple_sort.c</div><div class="fdesc">Ordena 3 elementos diretamente e listas pequenas (4–10) por seleção de mínimo.</div></div>
+    <div class="filecard"><div class="fname">medium_sort.c</div><div class="fdesc">Estratégia por "blocos" (chunks) para listas de tamanho médio (11–100).</div></div>
+    <div class="filecard"><div class="fname">complex_sort.c</div><div class="fdesc">Mesma ideia de blocos, ajustada para listas grandes (101+).</div></div>
+  </div>
+</section>
+
+<!-- 3. DIAGRAMA DE ARQUITETURA -->
+<section>
+  <div class="section-head"><span class="section-num">03</span><h2>Diagrama de arquitetura — quem depende de quem</h2></div>
+  <p class="section-sub">As setas indicam "chama funções de". <code style="font-family:var(--mono);color:var(--teal)">push_swap.h</code> (faixa lateral) é o contrato incluído por todos os arquivos.</p>
+  <div class="panel">
+    <svg viewBox="0 0 1080 760" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+      <defs>
+        <marker id="a2" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+          <path d="M0,0 L6,3 L0,6 Z" fill="#5b6478"/>
+        </marker>
+      </defs>
+      <!-- header spine -->
+      <rect x="20" y="30" width="46" height="700" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="43" y="380" fill="#9aa2b1" font-size="12" text-anchor="middle" transform="rotate(-90 43 380)">push_swap.h — contrato comum</text>
+
+      <!-- main -->
+      <rect x="460" y="30" width="160" height="46" rx="8" fill="#232a38" stroke="#E8A33D" stroke-width="1.6"/>
+      <text x="540" y="58" fill="#EDEAE3" font-size="14" text-anchor="middle" font-weight="700">main.c</text>
+
+      <!-- parser / stack_utils -->
+      <rect x="300" y="140" width="160" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="380" y="168" fill="#EDEAE3" font-size="13" text-anchor="middle">parser.c</text>
+      <rect x="620" y="140" width="180" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="710" y="168" fill="#EDEAE3" font-size="13" text-anchor="middle">stack_utils.c</text>
+
+      <!-- strategy selector line -->
+      <text x="540" y="240" fill="#9aa2b1" font-size="11" text-anchor="middle">escolhe por tamanho ↓</text>
+
+      <!-- three sort strategy boxes -->
+      <rect x="130" y="260" width="190" height="50" rx="8" fill="#1a1f29" stroke="#3DBFAE" stroke-width="1.4"/>
+      <text x="225" y="290" fill="#EDEAE3" font-size="13" text-anchor="middle">simple_sort.c</text>
+
+      <rect x="450" y="260" width="190" height="50" rx="8" fill="#1a1f29" stroke="#3DBFAE" stroke-width="1.4"/>
+      <text x="545" y="290" fill="#EDEAE3" font-size="13" text-anchor="middle">medium_sort.c</text>
+
+      <rect x="760" y="260" width="190" height="50" rx="8" fill="#1a1f29" stroke="#3DBFAE" stroke-width="1.4"/>
+      <text x="855" y="290" fill="#EDEAE3" font-size="13" text-anchor="middle">complex_sort.c</text>
+
+      <!-- support utils -->
+      <rect x="130" y="380" width="170" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="215" y="408" fill="#EDEAE3" font-size="13" text-anchor="middle">indexer.c</text>
+
+      <rect x="330" y="380" width="200" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="430" y="401" fill="#EDEAE3" font-size="12.5" text-anchor="middle">disorder_metric.c</text>
+      <text x="430" y="416" fill="#6b7284" font-size="9.5" text-anchor="middle">(get_stack_size)</text>
+
+      <rect x="560" y="380" width="170" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="645" y="408" fill="#EDEAE3" font-size="13" text-anchor="middle">math_utils.c</text>
+
+      <!-- wrappers -->
+      <rect x="300" y="500" width="200" height="46" rx="8" fill="#1a1f29" stroke="#E8A33D" stroke-width="1.4"/>
+      <text x="400" y="528" fill="#EDEAE3" font-size="13" text-anchor="middle">op_wrappers_a.c</text>
+
+      <rect x="560" y="500" width="200" height="46" rx="8" fill="#1a1f29" stroke="#3DBFAE" stroke-width="1.4"/>
+      <text x="660" y="528" fill="#EDEAE3" font-size="13" text-anchor="middle">op_wrappers_b.c</text>
+
+      <!-- core ops -->
+      <rect x="300" y="610" width="200" height="46" rx="8" fill="#232a38" stroke="#5b6478"/>
+      <text x="400" y="638" fill="#EDEAE3" font-size="13" text-anchor="middle">op_swap_push.c</text>
+
+      <rect x="560" y="610" width="200" height="46" rx="8" fill="#232a38" stroke="#5b6478"/>
+      <text x="660" y="638" fill="#EDEAE3" font-size="13" text-anchor="middle">op_rotate.c</text>
+
+      <!-- terminal output -->
+      <rect x="380" y="700" width="320" height="40" rx="20" fill="none" stroke="#6b7284" stroke-dasharray="3 4"/>
+      <text x="540" y="725" fill="#9aa2b1" font-size="12" text-anchor="middle">stdout — imprime cada comando executado</text>
+
+      <!-- arrows -->
+      <g stroke="#5b6478" stroke-width="1.5" fill="none" marker-end="url(#a2)">
+        <path d="M500 76 L 400 140"/>
+        <path d="M580 76 L 700 140"/>
+        <path d="M540 76 L 540 100 L 225 100 L 225 260"/>
+        <path d="M540 100 L 545 260"/>
+        <path d="M540 100 L 855 100 L 855 260"/>
+        <path d="M225 310 L 215 380"/>
+        <path d="M545 310 L 430 380"/>
+        <path d="M545 310 L 645 380"/>
+        <path d="M855 310 L 645 380"/>
+        <path d="M225 310 L 400 500"/>
+        <path d="M545 310 L 400 500"/>
+        <path d="M855 310 L 660 500"/>
+        <path d="M400 546 L 400 610"/>
+        <path d="M660 546 L 660 610"/>
+        <path d="M400 546 L 660 610"/>
+        <path d="M400 656 L 480 700"/>
+        <path d="M660 656 L 600 700"/>
+      </g>
+    </svg>
+    <figcaption>main.c orquestra tudo · três estratégias competem pelo tamanho da pilha · todas convergem nos wrappers → operações fundamentais → terminal</figcaption>
+  </div>
+
+  <div class="callout alert">
+    <b>Observação de arquitetura —</b> não existe um wrapper <code style="font-family:var(--mono)">sb</code> (swap na pilha B). A função genérica <code style="font-family:var(--mono)">swap()</code> existe, mas só é exposta via <code style="font-family:var(--mono)">sa</code>. Isso é coerente com os algoritmos aqui: eles nunca precisam trocar os dois primeiros elementos de B, só de A.
+  </div>
+  <div class="callout">
+    <b>Observação de arquitetura —</b> <code style="font-family:var(--mono)">calculate_disorder_metric</code> (em disorder_metric.c) é declarada e implementada, mas nenhum outro arquivo a chama. É uma função "órfã" — provavelmente preparada para uso futuro em depuração ou em uma heurística de escolha de algoritmo.
+  </div>
+</section>
+
+<!-- 4. ESTRUTURA DE DADOS -->
+<section>
+  <div class="section-head"><span class="section-num">04</span><h2>A estrutura de dados: uma pilha circular</h2></div>
+  <p class="section-sub">Cada pilha não é um array — é uma <strong>lista duplamente ligada e circular</strong>. O último elemento aponta de volta para o primeiro, o que torna "girar" a pilha uma operação muito barata: só se move o ponteiro de cabeça.</p>
+  <div class="panel">
+    <svg viewBox="0 0 700 380" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace">
+      <defs>
+        <marker id="a3" markerWidth="7" markerHeight="7" refX="5" refY="2.5" orient="auto"><path d="M0,0 L5,2.5 L0,5 Z" fill="#9aa2b1"/></marker>
+      </defs>
+      <g fill="none" stroke="#E8A33D" stroke-width="1.6">
+        <circle cx="350" cy="60" r="6" fill="#E8A33D"/>
+        <circle cx="530" cy="150" r="6" fill="#3a4152"/>
+        <circle cx="460" cy="320" r="6" fill="#3a4152"/>
+        <circle cx="240" cy="320" r="6" fill="#3a4152"/>
+        <circle cx="170" cy="150" r="6" fill="#3a4152"/>
+      </g>
+      <!-- nodes as boxes -->
+      <g font-size="11.5">
+        <rect x="300" y="20" width="100" height="52" rx="8" fill="#1a1f29" stroke="#E8A33D" stroke-width="1.6"/>
+        <text x="350" y="40" fill="#E8A33D" text-anchor="middle" font-weight="700">value: 8</text>
+        <text x="350" y="56" fill="#9aa2b1" text-anchor="middle">index: 3</text>
+
+        <rect x="480" y="115" width="100" height="52" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+        <text x="530" y="135" fill="#EDEAE3" text-anchor="middle">value: 2</text>
+        <text x="530" y="151" fill="#9aa2b1" text-anchor="middle">index: 0</text>
+
+        <rect x="410" y="284" width="100" height="52" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+        <text x="460" y="304" fill="#EDEAE3" text-anchor="middle">value: 6</text>
+        <text x="460" y="320" fill="#9aa2b1" text-anchor="middle">index: 2</text>
+
+        <rect x="190" y="284" width="100" height="52" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+        <text x="240" y="304" fill="#EDEAE3" text-anchor="middle">value: 5</text>
+        <text x="240" y="320" fill="#9aa2b1" text-anchor="middle">index: 1</text>
+
+        <rect x="120" y="115" width="100" height="52" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+        <text x="170" y="135" fill="#EDEAE3" text-anchor="middle">value: 9</text>
+        <text x="170" y="151" fill="#9aa2b1" text-anchor="middle">index: 4</text>
+      </g>
+      <!-- ring arrows (next) -->
+      <g stroke="#9aa2b1" stroke-width="1.3" fill="none" marker-end="url(#a3)">
+        <path d="M395 55 C 460 75, 505 100, 522 118"/>
+        <path d="M525 168 C 510 220, 490 260, 465 282"/>
+        <path d="M415 322 C 380 335, 320 335, 288 322"/>
+        <path d="M215 285 C 195 262, 178 220, 172 170"/>
+        <path d="M178 118 C 200 95, 260 68, 303 56"/>
+      </g>
+      <text x="350" y="360" fill="#6b7284" font-size="11" text-anchor="middle">next →  (percorrendo em sentido horário) · prev aponta no sentido inverso</text>
+    </svg>
+    <figcaption>Exemplo: pilha [8, 9, 5, 6, 2] com índices já calculados por indexer.c (0 = menor valor, 4 = maior)</figcaption>
+  </div>
+  <table>
+    <tr><th>Campo</th><th>Tipo</th><th>Papel</th></tr>
+    <tr><td><code>value</code></td><td>int</td><td>O número original informado pelo usuário.</td></tr>
+    <tr><td><code>index</code></td><td>int</td><td>Posição que o valor teria numa pilha ordenada (calculado por <code>set_stack_indices</code>). É o que os algoritmos usam para decidir movimentos, sem comparar valores brutos toda hora.</td></tr>
+    <tr><td><code>next</code> / <code>prev</code></td><td>ponteiros</td><td>Ligam o nó aos vizinhos, formando o anel. Permitem girar a pilha apenas movendo o ponteiro de cabeça — sem copiar dados.</td></tr>
+  </table>
+</section>
+
+<!-- 5. FLUXOGRAMA PRINCIPAL -->
+<section>
+  <div class="section-head"><span class="section-num">05</span><h2>Fluxograma — do terminal ao resultado</h2></div>
+  <p class="section-sub">O caminho que os argumentos percorrem desde a digitação no terminal até a impressão dos comandos de ordenação.</p>
+  <div class="panel">
+    <svg viewBox="0 0 620 1180" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="12.5">
+      <defs>
+        <marker id="a4" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b6478"/></marker>
+      </defs>
+      <!-- start -->
+      <rect x="210" y="10" width="200" height="42" rx="21" fill="#232a38" stroke="#E8A33D"/>
+      <text x="310" y="36" fill="#EDEAE3" text-anchor="middle">./push_swap "args"</text>
+
+      <path d="M310 52 V 84" stroke="#5b6478" marker-end="url(#a4)"/>
+      <polygon points="310,84 400,116 310,148 220,116" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="120" fill="#EDEAE3" text-anchor="middle">argc &lt; 2 ?</text>
+
+      <path d="M400 116 H 470" stroke="#5b6478" marker-end="url(#a4)"/>
+      <text x="450" y="108" fill="#9aa2b1" font-size="10">sim</text>
+      <rect x="470" y="96" width="130" height="40" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="535" y="120" fill="#9aa2b1" text-anchor="middle">encerra (sem erro)</text>
+
+      <path d="M310 148 V 178" stroke="#5b6478" marker-end="url(#a4)"/>
+      <text x="322" y="168" fill="#9aa2b1" font-size="10">não</text>
+      <rect x="180" y="178" width="260" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="206" fill="#EDEAE3" text-anchor="middle">converte cada argumento (parser.c)</text>
+
+      <path d="M310 224 V 254" stroke="#5b6478" marker-end="url(#a4)"/>
+      <polygon points="310,254 420,290 310,326 200,290" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="284" fill="#EDEAE3" text-anchor="middle" font-size="11.5">número inválido /</text>
+      <text x="310" y="298" fill="#EDEAE3" text-anchor="middle" font-size="11.5">duplicado?</text>
+
+      <path d="M420 290 H 500" stroke="#5b6478" marker-end="url(#a4)"/>
+      <text x="470" y="282" fill="#9aa2b1" font-size="10">sim</text>
+      <rect x="460" y="310" width="140" height="46" rx="8" fill="#241a1a" stroke="#E2604F"/>
+      <text x="530" y="332" fill="#E2604F" text-anchor="middle">imprime</text>
+      <text x="530" y="346" fill="#E2604F" text-anchor="middle">"Error" · sai(1)</text>
+
+      <path d="M310 326 V 356" stroke="#5b6478" marker-end="url(#a4)"/>
+      <text x="322" y="346" fill="#9aa2b1" font-size="10">não</text>
+      <rect x="180" y="356" width="260" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="384" fill="#EDEAE3" text-anchor="middle">monta pilha A (lista circular)</text>
+
+      <path d="M310 402 V 432" stroke="#5b6478" marker-end="url(#a4)"/>
+      <polygon points="310,432 410,464 310,496 210,464" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="468" fill="#EDEAE3" text-anchor="middle" font-size="11.5">já ordenada?</text>
+
+      <path d="M410 464 H 490" stroke="#5b6478" marker-end="url(#a4)"/>
+      <text x="455" y="456" fill="#9aa2b1" font-size="10">sim</text>
+      <rect x="460" y="444" width="140" height="40" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="530" y="468" fill="#9aa2b1" text-anchor="middle">encerra (0 comandos)</text>
+
+      <path d="M310 496 V 526" stroke="#5b6478" marker-end="url(#a4)"/>
+      <text x="322" y="516" fill="#9aa2b1" font-size="10">não</text>
+      <rect x="150" y="526" width="320" height="46" rx="8" fill="#1a1f29" stroke="#E8A33D" stroke-width="1.4"/>
+      <text x="310" y="554" fill="#EDEAE3" text-anchor="middle">escolhe estratégia pelo tamanho (N)</text>
+
+      <path d="M310 572 V 602" stroke="#5b6478" marker-end="url(#a4)"/>
+
+      <!-- branch row -->
+      <rect x="40" y="602" width="105" height="52" rx="8" fill="#1a1f29" stroke="#3DBFAE"/>
+      <text x="92" y="624" fill="#EDEAE3" text-anchor="middle" font-size="11">N = 2</text>
+      <text x="92" y="640" fill="#3DBFAE" text-anchor="middle" font-size="11">sa</text>
+
+      <rect x="155" y="602" width="105" height="52" rx="8" fill="#1a1f29" stroke="#3DBFAE"/>
+      <text x="207" y="622" fill="#EDEAE3" text-anchor="middle" font-size="11">N = 3</text>
+      <text x="207" y="638" fill="#3DBFAE" text-anchor="middle" font-size="11">sort_three</text>
+
+      <rect x="270" y="602" width="105" height="52" rx="8" fill="#1a1f29" stroke="#3DBFAE"/>
+      <text x="322" y="622" fill="#EDEAE3" text-anchor="middle" font-size="11">4 ≤ N ≤ 10</text>
+      <text x="322" y="638" fill="#3DBFAE" text-anchor="middle" font-size="11">sort_small</text>
+
+      <rect x="385" y="602" width="105" height="52" rx="8" fill="#1a1f29" stroke="#3DBFAE"/>
+      <text x="437" y="622" fill="#EDEAE3" text-anchor="middle" font-size="11">11 ≤ N ≤ 100</text>
+      <text x="437" y="638" fill="#3DBFAE" text-anchor="middle" font-size="11">medium_sort</text>
+
+      <rect x="500" y="602" width="105" height="52" rx="8" fill="#1a1f29" stroke="#3DBFAE"/>
+      <text x="552" y="622" fill="#EDEAE3" text-anchor="middle" font-size="11">N &gt; 100</text>
+      <text x="552" y="638" fill="#3DBFAE" text-anchor="middle" font-size="11">complex_sort</text>
+
+      <g stroke="#5b6478" stroke-width="1.3" fill="none" marker-end="url(#a4)">
+        <path d="M150 602 L 200 572"/>
+        <path d="M260 602 L 280 572"/>
+        <path d="M370 602 L 330 572"/>
+        <path d="M480 602 L 340 572"/>
+        <path d="M580 602 L 350 572"/>
+      </g>
+
+      <path d="M92 654 V 690 H 310 V 720" stroke="#5b6478" fill="none"/>
+      <path d="M207 654 V 690" stroke="#5b6478" fill="none"/>
+      <path d="M322 654 V 720" stroke="#5b6478" marker-end="url(#a4)" fill="none"/>
+      <path d="M437 654 V 690 H 310" stroke="#5b6478" fill="none"/>
+      <path d="M552 654 V 690 H 310" stroke="#5b6478" fill="none" marker-end="url(#a4)"/>
+
+      <rect x="150" y="720" width="320" height="52" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="742" fill="#EDEAE3" text-anchor="middle">cada operação chama o wrapper</text>
+      <text x="310" y="758" fill="#9aa2b1" text-anchor="middle" font-size="11">(sa/ra/rra/pb/rb/rrb/pa) → imprime no stdout</text>
+
+      <path d="M310 772 V 802" stroke="#5b6478" marker-end="url(#a4)"/>
+      <rect x="180" y="802" width="260" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="310" y="830" fill="#EDEAE3" text-anchor="middle">libera memória (free_stack)</text>
+
+      <path d="M310 848 V 878" stroke="#5b6478" marker-end="url(#a4)"/>
+      <rect x="230" y="878" width="160" height="42" rx="21" fill="#232a38" stroke="#3DBFAE"/>
+      <text x="310" y="904" fill="#EDEAE3" text-anchor="middle">fim · pilha A ordenada</text>
+    </svg>
+  </div>
+</section>
+
+<!-- 6. TABELA DE OPERAÇÕES -->
+<section>
+  <div class="section-head"><span class="section-num">06</span><h2>Tabela — os sete movimentos permitidos</h2></div>
+  <p class="section-sub">Todo o algoritmo, por mais elaborado que pareça, é construído combinando apenas estes comandos.</p>
+  <table>
+    <tr><th>Comando</th><th>Nome completo</th><th>O que faz</th><th>Custo</th></tr>
+    <tr><td><code>sa</code></td><td>swap A</td><td>Troca os dois elementos do topo da pilha A.</td><td>O(1)</td></tr>
+    <tr><td><code>ra</code></td><td>rotate A</td><td>O topo de A vai para o final — a pilha "sobe" uma posição.</td><td>O(1)</td></tr>
+    <tr><td><code>rra</code></td><td>reverse rotate A</td><td>O último elemento de A vira o topo — a pilha "desce" uma posição.</td><td>O(1)</td></tr>
+    <tr><td><code>pb</code></td><td>push to B</td><td>Move o topo de A para o topo de B.</td><td>O(1)</td></tr>
+    <tr><td><code>rb</code></td><td>rotate B</td><td>Igual a <code>ra</code>, mas na pilha B.</td><td>O(1)</td></tr>
+    <tr><td><code>rrb</code></td><td>reverse rotate B</td><td>Igual a <code>rra</code>, mas na pilha B.</td><td>O(1)</td></tr>
+    <tr><td><code>pa</code></td><td>push to A</td><td>Move o topo de B para o topo de A.</td><td>O(1)</td></tr>
+  </table>
+  <div class="callout">
+    Não existe <code style="font-family:var(--mono)">sb</code> (swap B) neste projeto — os algoritmos implementados nunca precisam trocar os dois primeiros elementos de B.
+  </div>
+</section>
+
+<!-- 7. TABELA DE ALGORITMOS -->
+<section>
+  <div class="section-head"><span class="section-num">07</span><h2>Tabela — as cinco estratégias de ordenação</h2></div>
+  <p class="section-sub">O programa nunca usa a mesma tática para 3 números e para 3.000. Quanto maior a pilha, mais elaborada a estratégia.</p>
+  <table>
+    <tr><th>Tamanho (N)</th><th>Estratégia</th><th>Arquivo</th><th>Ideia central</th><th>Complexidade aprox.</th></tr>
+    <tr><td>2</td><td><code>sa</code></td><td>op_wrappers_a.c</td><td>Só há uma ordem errada possível: um único swap resolve.</td><td>O(1)</td></tr>
+    <tr><td>3</td><td>sort_three</td><td>simple_sort.c</td><td>No máximo uma rotação (para posicionar o maior) seguida de um swap.</td><td>O(1)</td></tr>
+    <tr><td>4 – 10</td><td>sort_small</td><td>simple_sort.c</td><td>Seleção do menor valor repetidamente: gira até o menor ficar no topo, empurra para B; no final, com 3 restantes, aplica <code>sort_three</code> e traz tudo de volta.</td><td>O(n²)</td></tr>
+    <tr><td>11 – 100</td><td>medium_sort</td><td>medium_sort.c</td><td>Distribui elementos em "blocos" (tamanho ≈ 1.4·√N) empurrando para B; depois retorna cada bloco para A na posição correta, girando pelo lado mais curto.</td><td>≈ O(n log n)</td></tr>
+    <tr><td>101+</td><td>complex_sort</td><td>complex_sort.c</td><td>Mesma técnica de blocos do medium_sort, mas com blocos maiores (≈ 2.5·√N) — mais adequados a listas grandes.</td><td>≈ O(n log n)</td></tr>
+  </table>
+</section>
+
+<!-- 8. FLUXOGRAMA DO ALGORITMO DE BLOCOS -->
+<section>
+  <div class="section-head"><span class="section-num">08</span><h2>Como funciona o algoritmo de "blocos" (medium/complex_sort)</h2></div>
+  <p class="section-sub">A técnica usada para pilhas grandes, explicada como um fluxo de decisão.</p>
+  <div class="panel">
+    <svg viewBox="0 0 640 560" xmlns="http://www.w3.org/2000/svg" font-family="JetBrains Mono, monospace" font-size="12.5">
+      <defs><marker id="a5" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto"><path d="M0,0 L6,3 L0,6 Z" fill="#5b6478"/></marker></defs>
+
+      <rect x="180" y="10" width="280" height="46" rx="8" fill="#1a1f29" stroke="#E8A33D"/>
+      <text x="320" y="38" fill="#EDEAE3" text-anchor="middle">calcula índice de cada valor</text>
+
+      <path d="M320 56 V 86" stroke="#5b6478" marker-end="url(#a5)"/>
+      <rect x="150" y="86" width="340" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="320" y="114" fill="#EDEAE3" text-anchor="middle">define tamanho do bloco (≈ k·√N)</text>
+
+      <path d="M320 132 V 162" stroke="#5b6478" marker-end="url(#a5)"/>
+      <polygon points="320,162 430,198 320,234 210,198" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="320" y="194" fill="#EDEAE3" text-anchor="middle" font-size="11.5">índice do topo</text>
+      <text x="320" y="208" fill="#EDEAE3" text-anchor="middle" font-size="11.5">está no bloco atual?</text>
+
+      <path d="M430 198 H 500" stroke="#5b6478" marker-end="url(#a5)"/>
+      <text x="465" y="190" fill="#9aa2b1" font-size="10">sim</text>
+      <rect x="480" y="176" width="140" height="46" rx="8" fill="#1a1f29" stroke="#3DBFAE"/>
+      <text x="550" y="196" fill="#3DBFAE" text-anchor="middle" font-size="11">pb</text>
+      <text x="550" y="212" fill="#9aa2b1" text-anchor="middle" font-size="10">(empurra p/ B)</text>
+
+      <path d="M210 198 V 240" stroke="#5b6478" marker-end="url(#a5)"/>
+      <text x="222" y="228" fill="#9aa2b1" font-size="10">não</text>
+      <rect x="60" y="240" width="150" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="135" y="268" fill="#EDEAE3" text-anchor="middle" font-size="11">ra — gira A,</text>
+      <text x="135" y="282" fill="#9aa2b1" text-anchor="middle" font-size="10">tenta o próximo</text>
+
+      <path d="M135 286 C 60 340, 60 160, 210 190" stroke="#5b6478" fill="none" marker-end="url(#a5)"/>
+
+      <path d="M320 234 V 340" stroke="#5b6478" fill="none"/>
+      <path d="M550 222 V 340 H 320" stroke="#5b6478" fill="none" marker-end="url(#a5)"/>
+
+      <rect x="180" y="340" width="280" height="46" rx="8" fill="#1a1f29" stroke="#2b3242"/>
+      <text x="320" y="362" fill="#EDEAE3" text-anchor="middle" font-size="11.5">repete até A esvaziar</text>
+      <text x="320" y="378" fill="#9aa2b1" text-anchor="middle" font-size="10">(todos os blocos passaram por B)</text>
+
+      <path d="M320 386 V 416" stroke="#5b6478" marker-end="url(#a5)"/>
+      <rect x="130" y="416" width="380" height="52" rx="8" fill="#1a1f29" stroke="#E8A33D" stroke-width="1.4"/>
+      <text x="320" y="438" fill="#EDEAE3" text-anchor="middle" font-size="11.5">para cada elemento em B, do maior índice</text>
+      <text x="320" y="454" fill="#EDEAE3" text-anchor="middle" font-size="11.5">ao menor: gira pelo caminho mais curto até pa</text>
+
+      <path d="M320 468 V 498" stroke="#5b6478" marker-end="url(#a5)"/>
+      <rect x="220" y="498" width="200" height="42" rx="21" fill="#232a38" stroke="#3DBFAE"/>
+      <text x="320" y="524" fill="#EDEAE3" text-anchor="middle">B vazia · A ordenada</text>
+    </svg>
+    <figcaption>"Blocos" evitam varrer a pilha inteira a cada passo: cada valor só precisa de uma passada de ida (para B) e uma de volta (para A).</figcaption>
+  </div>
+</section>
+
+<!-- 9. RESUMO DE INTERAÇÃO -->
+<section>
+  <div class="section-head"><span class="section-num">09</span><h2>Resumo: como as funções conversam entre si</h2></div>
+  <p>
+    Tudo começa em <strong>main.c</strong>, que delega a leitura dos argumentos para <strong>parser.c</strong> (que valida números e detecta duplicados) e a montagem da pilha para <strong>stack_utils.c</strong>. Antes de ordenar, <code style="font-family:var(--mono);color:var(--teal)">is_already_sorted</code> evita trabalho desnecessário quando a lista já está em ordem.
+  </p>
+  <p>
+    A decisão de <strong>qual arquivo de ordenação usar</strong> é tomada apenas por <code style="font-family:var(--mono);color:var(--teal)">select_sort_strategy</code>, olhando o tamanho da pilha. Os três algoritmos maiores (<strong>sort_small</strong>, <strong>medium_sort</strong>, <strong>complex_sort</strong>) dependem de <strong>indexer.c</strong> para saber a posição relativa de cada valor e de <strong>disorder_metric.c</strong> apenas para medir o tamanho da pilha (<code style="font-family:var(--mono);color:var(--teal)">get_stack_size</code>) — os dois algoritmos de blocos também usam <strong>math_utils.c</strong> para calcular o tamanho ideal do bloco via raiz quadrada.
+  </p>
+  <p>
+    Nenhum algoritmo de ordenação mexe diretamente nos ponteiros da lista. Todos passam pela camada de <strong>op_wrappers_a.c</strong> e <strong>op_wrappers_b.c</strong>, que são finas: chamam a operação real (em <strong>op_swap_push.c</strong> ou <strong>op_rotate.c</strong>) e imprimem o nome do comando. Essa separação é o que permite ao programa <em>ao mesmo tempo</em> ordenar a pilha e produzir, como efeito colateral, a lista de comandos exigida pelo enunciado do projeto.
+  </p>
+  <p>
+    Por fim, <strong>main.c</strong> libera toda a memória das duas pilhas com <code style="font-family:var(--mono);color:var(--teal)">free_stack</code>, garantindo que nenhum nó fique órfão, e encerra.
+  </p>
+</section>
+
+<footer>push_swap — documentação gerada a partir do código-fonte fornecido</footer>
+</div>
+</body>
+</html>
