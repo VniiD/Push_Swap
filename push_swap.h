@@ -1,54 +1,86 @@
-// push_swap.h
-#ifndef PUSH_SWAP_H
-#define PUSH_SWAP_H
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   push_swap.h                                        :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/13 12:37:04 by v                 #+#    #+#             */
+/*   Updated: 2026/07/13 13:24:39 by v                ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
 
+#ifndef PUSH_SWAP_H
+# define PUSH_SWAP_H
+
+#include <stddef.h>
 #include <stdlib.h>
 #include <unistd.h>
 
-typedef struct s_stack_node
+typedef struct s_stack
 {
-	int                  value;
-	int                  index;
-	struct s_stack_node  *next;
-	struct s_stack_node  *prev;
-}	t_stack_node;
+	int		*data;
+	size_t	size;
+	size_t	capacity;
+}	t_stack;
 
-/* Módulo de Parsing e Validação - parser.c */
-int				ft_atoi_strict(const char *str, int *error);
-int				check_duplicates(int *array, int size);
+typedef struct s_program
+{
+	t_stack	a;
+	t_stack	b;
+	double	disorder;
+	int		bench_mode;
+	int		strategy;
+}	t_program;
 
-/* Utilitários de Stack - stack_utils.c */
-t_stack_node	*create_node(int value);
-void			append_node(t_stack_node **head, t_stack_node *new_node);
-void			free_stack(t_stack_node **head);
-int				get_stack_size(t_stack_node *head);
+/* utils_memory.c */
+void	free_program(t_program *prog);
+int		init_program(t_program *prog, size_t capacity);
+void	exit_error(t_program *prog);
 
-/* Operações Fundamentais de Ponteiros - op_swap_push.c & op_rotate.c */
-void			swap(t_stack_node **head);
-void			push(t_stack_node **src, t_stack_node **dst);
-void			rotate(t_stack_node **head);
-void			reverse_rotate(t_stack_node **head);
+/* utils_parsing.c */
+long	ft_atoi_strict(const char *str, int *error);
+void	push_back_validated(t_program *prog, int num);
 
-/* Wrappers de Exibição das Operações - op_wrappers_a.c & op_wrappers_b.c */
-void			sa(t_stack_node **a);
-void			ra(t_stack_node **a);
-void			rra(t_stack_node **a);
-void			pb(t_stack_node **a, t_stack_node **b);
-void			rb(t_stack_node **b);
-void			rrb(t_stack_node **b);
-void			pa(t_stack_node **b, t_stack_node **a);
+/* parser_main.c */
+void	parse_arguments(int argc, char **argv, t_program *prog);
 
-/* Módulo de Métrica de Desordem e Indexação - disorder_metric.c & indexer.c */
-int				calculate_disorder_metric(t_stack_node *head);
-void			set_stack_indices(t_stack_node *head);
+/* op_swap_push.c */
+void	op_swap(t_stack *stack);
+void	op_push(t_stack *dst, t_stack *src);
 
-/* Utilitários Matemáticos - math_utils.c */
-int				ft_sqrt(int number);
+/* op_rot_revrot.c */
+void	op_rotate(t_stack *stack);
+void	op_reverse_rotate(t_stack *stack);
 
-/* Algoritmos de Ordenação - simple_sort.c, medium_sort.c & complex_sort.c */
-void			sort_three(t_stack_node **a);
-void			sort_small(t_stack_node **a, t_stack_node **b);
-void			medium_sort(t_stack_node **a, t_stack_node **b);
-void			complex_sort(t_stack_node **a, t_stack_node **b);
+/* disorder.c */
+double	compute_disorder(const int *stack_a, size_t size);
+
+/* writer.c */
+void	print_op(const char *op);
+void	print_bench_metrics(t_program *prog, long total_ops, const char *strat);
+
+/* op_wrappers.c */
+void	exec_sa(t_program *prog, long *op_count);
+void	exec_sb(t_program *prog, long *op_count);
+void	exec_pa(t_program *prog, long *op_count);
+void	exec_pb(t_program *prog, long *op_count);
+
+/* op_wrappers_rot.c */
+void	exec_ra(t_program *prog, long *op_count);
+void	exec_rb(t_program *prog, long *op_count);
+void	exec_rra(t_program *prog, long *op_count);
+void	exec_rrb(t_program *prog, long *op_count);
+
+/* op_wrappers_double.c */
+void	exec_ss(t_program *prog, long *op_count);
+void	exec_rr(t_program *prog, long *op_count);
+void	exec_rrr(t_program *prog, long *op_count);
+
+/* Algoritmos de Ordenacao Globais */
+void	sort_simple(t_program *prog, long *op_count);
+void	sort_medium(t_program *prog, int *sorted, long *op_count);
+void	sort_complex(t_program *prog, long *op_count);
+void	sort_adaptive(t_program *prog, long *op_count);
 
 #endif

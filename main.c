@@ -1,100 +1,75 @@
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main.c                                             :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
+/*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/13 13:06:43 by v                 #+#    #+#             */
+/*   Updated: 2026/07/13 14:08:26 by v                ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
 #include "push_swap.h"
 
-static int	is_already_sorted(t_stack_node *head)
+static int	is_already_sorted(t_stack *stack)
 {
-	t_stack_node	*curr;
+	size_t	i;
 
-	if (!head)
+	if (stack->size < 2)
 		return (1);
-	curr = head;
-	while (curr->next != head)
-	{
-		if (curr->value > curr->next->value)
-			return (0);
-		curr = curr->next;
-	}
-	return (1);
-}
-
-static void	select_sort_strategy(t_stack_node **a, t_stack_node **b)
-{
-	int	size;
-
-	size = get_stack_size(*a);
-	if (is_already_sorted(*a))
-		return ;
-	if (size == 2)
-		sa(a);
-	else if (size == 3)
-		sort_three(a);
-	else if (size <= 10)
-		sort_small(a, b);
-	else if (size <= 100)
-		medium_sort(a, b);
-	else
-		complex_sort(a, b);
-}
-
-static int	fill_stack_from_array(t_stack_node **a, int *array, int size)
-{
-	int				i;
-	t_stack_node	*new_node;
-
 	i = 0;
-	while (i < size)
+	while (i < stack->size - 1)
 	{
-		new_node = create_node(array[i]);
-		if (!new_node)
-		{
+		if (stack->data[i] > stack->data[i + 1])
 			return (0);
-		}
-		append_node(a, new_node);
 		i++;
 	}
 	return (1);
 }
 
-static int	parse_to_array(char **argv, int argc, int *array)
+static void	execute_forced_strategy(t_program *prog, long *op_count)
 {
-	int	i;
-	int	error;
-
-	i = 1;
-	error = 0;
-	while (i < argc)
+	if (prog->strategy == 1)
 	{
-		array[i - 1] = ft_atoi_strict(argv[i], &error);
-		if (error)
-			return (0);
-		i++;
+		sort_simple(prog, op_count);
+		if (prog->bench_mode)
+			print_bench_metrics(prog, *op_count, "Forced / O(n^2)");
 	}
-	if (check_duplicates(array, argc - 1))
-		return (0);
-	return (1);
+	else if (prog->strategy == 3)
+	{
+		sort_complex(prog, op_count);
+		if (prog->bench_mode)
+			print_bench_metrics(prog, *op_count, "Forced / O(n log n)");
+	}
+	else
+	{
+		sort_adaptive(prog, op_count);
+	}
 }
 
 int	main(int argc, char **argv)
 {
-	t_stack_node	*a;
-	t_stack_node	*b;
-	int				*array;
+	t_program	prog;
+	long		op_count;
 
 	if (argc < 2)
 		return (0);
-	a = NULL;
-	b = NULL;
-	array = malloc(sizeof(int) * (argc - 1));
-	if (!array || !parse_to_array(argv, argc, array)
-		|| !fill_stack_from_array(&a, array, argc - 1))
-	{
-		free(array);
-		free_stack(&a);
-		write(2, "Error\n", 6);
+	op_count = 0;
+	if (!init_program(&prog, (size_t)argc))
 		return (1);
+	parse_arguments(argc, argv, &prog);
+	if (prog.a.size == 0)
+	{
+		free_program(&prog);
+		return (0);
 	}
-	free(array);
-	select_sort_strategy(&a, &b);
-	free_stack(&a);
-	free_stack(&b);
+	if (is_already_sorted(&prog.a))
+	{
+		free_program(&prog);
+		return (0);
+	}
+	execute_forced_strategy(&prog, &op_count);
+	free_program(&prog);
 	return (0);
 }
