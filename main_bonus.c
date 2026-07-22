@@ -3,6 +3,18 @@
 /*                                                        :::      ::::::::   */
 /*   main_bonus.c                                       :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
+/*   By: vde-alme <vde-alme@student.42.fr>          +#+  +:+       +#+        */
+/*                                                +#+#+#+#+#+   +#+           */
+/*   Created: 2026/07/13 13:13:20 by v                 #+#    #+#             */
+/*   Updated: 2026/07/14 16:58:57 by vde-alme         ###   ########.fr       */
+/*                                                                            */
+/* ************************************************************************** */
+
+/* ************************************************************************** */
+/*                                                                            */
+/*                                                        :::      ::::::::   */
+/*   main_bonus.c                                       :+:      :+:    :+:   */
+/*                                                    +:+ +:+         +:+     */
 /*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 13:13:20 by v                 #+#    #+#             */
@@ -11,10 +23,6 @@
 /* ************************************************************************** */
 
 #include "push_swap.h"
-
-int		read_line(char *buffer, size_t max_len);
-int		execute_checker_op(t_program *prog, const char *op);
-void	check_result(t_program *prog);
 
 static void	read_and_execute(t_program *prog)
 {
@@ -29,13 +37,31 @@ static void	read_and_execute(t_program *prog)
 	}
 }
 
+static size_t	get_safe_capacity(int argc)
+{
+	int		i;
+	size_t	count;
+
+	i = 0;
+	count = 0;
+	while (++i < argc)
+	{
+		count += 4000;
+	}
+	if (count < 4000)
+		count = 4000;
+	return (count);
+}
+
 int	main(int argc, char **argv)
 {
 	t_program	prog;
+	size_t		capacity;
 
 	if (argc < 2)
 		return (0);
-	if (!init_program(&prog, (size_t)argc))
+	capacity = get_safe_capacity(argc);
+	if (!init_program(&prog, capacity))
 		return (1);
 	parse_arguments(argc, argv, &prog);
 	if (prog.a.size == 0)

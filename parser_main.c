@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   parser_main.c                                      :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
+/*   By: vde-alme <vde-alme@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 12:44:27 by v                 #+#    #+#             */
-/*   Updated: 2026/07/13 12:46:17 by v                ###   ########.fr       */
+/*   Updated: 2026/07/14 20:48:34 by vde-alme         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -32,32 +32,63 @@ static int	parse_flag(const char *arg, t_program *prog)
 		prog->strategy = 3;
 	else if (ft_strcmp(arg, "--adaptive") == 0)
 		prog->strategy = 4;
-	else if (ft_strcmp(arg, "--bench") == 0)
+	else if (ft_strcmp(arg, "--count-only") == 0)
 		prog->bench_mode = 1;
 	else
 		return (0);
 	return (1);
 }
 
-void	parse_arguments(int argc, char **argv, t_program *prog)
+static void	free_split(char **split)
 {
-	int		i;
+	int	i;
+
+	i = 0;
+	if (!split)
+		return ;
+	while (split[i])
+		free(split[i++]);
+	free(split);
+}
+
+static void	process_split(t_program *prog, char **split)
+{
+	int		j;
 	int		error;
 	long	num;
 
-	i = 1;
-	error = 0;
-	while (i < argc)
+	j = 0;
+	while (split[j])
+	{
+		error = 0;
+		num = ft_atoi_strict(split[j], &error);
+		if (error)
+		{
+			free_split(split);
+			exit_error(prog);
+		}
+		push_back_validated(prog, (int)num);
+		j++;
+	}
+}
+
+void	parse_arguments(int argc, char **argv, t_program *prog)
+{
+	int		i;
+	char	**split;
+
+	i = 0;
+	while (++i < argc)
 	{
 		if (parse_flag(argv[i], prog))
-		{
-			i++;
 			continue ;
-		}
-		num = ft_atoi_strict(argv[i], &error);
-		if (error)
+		split = ft_split(argv[i], ' ');
+		if (!split || !split[0])
+		{
+			free_split(split);
 			exit_error(prog);
-		push_back_validated(prog, (int)num);
-		i++;
+		}
+		process_split(prog, split);
+		free_split(split);
 	}
 }

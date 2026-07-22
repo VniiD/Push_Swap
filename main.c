@@ -3,14 +3,16 @@
 /*                                                        :::      ::::::::   */
 /*   main.c                                             :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
+/*   By: vde-alme <vde-alme@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 13:06:43 by v                 #+#    #+#             */
-/*   Updated: 2026/07/13 14:08:26 by v                ###   ########.fr       */
+/*   Updated: 2026/07/14 21:08:39 by vde-alme         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "push_swap.h"
+
+extern int bench_silence;
 
 static int	is_already_sorted(t_stack *stack)
 {
@@ -28,48 +30,52 @@ static int	is_already_sorted(t_stack *stack)
 	return (1);
 }
 
-static void	execute_forced_strategy(t_program *prog, long *op_count)
+static void	select_strategy(t_program *prog, long *op_count)
 {
-	if (prog->strategy == 1)
-	{
+	if (prog->a.size <= 5)
 		sort_simple(prog, op_count);
-		if (prog->bench_mode)
-			print_bench_metrics(prog, *op_count, "Forced / O(n^2)");
+	else if (prog->strategy == 1)
+	{
+		if (prog->a.size <= 10)
+			sort_simple(prog, op_count);
+		else if (!run_forced_medium(prog, op_count))
+			exit_error(prog);
+	}
+	else if (prog->strategy == 2)
+	{
+		if (!run_forced_medium(prog, op_count))
+			exit_error(prog);
 	}
 	else if (prog->strategy == 3)
-	{
 		sort_complex(prog, op_count);
-		if (prog->bench_mode)
-			print_bench_metrics(prog, *op_count, "Forced / O(n log n)");
-	}
 	else
-	{
 		sort_adaptive(prog, op_count);
-	}
 }
 
 int	main(int argc, char **argv)
 {
 	t_program	prog;
 	long		op_count;
+	const char	*m;
 
-	if (argc < 2)
-		return (0);
+	if (argc < 2 || !init_program(&prog, (size_t)argc))
+		return (argc < 2 ? 0 : 1);
 	op_count = 0;
-	if (!init_program(&prog, (size_t)argc))
-		return (1);
 	parse_arguments(argc, argv, &prog);
-	if (prog.a.size == 0)
-	{
-		free_program(&prog);
-		return (0);
-	}
-	if (is_already_sorted(&prog.a))
-	{
-		free_program(&prog);
-		return (0);
-	}
-	execute_forced_strategy(&prog, &op_count);
+	prog.disorder = compute_disorder(prog.a.data, prog.a.size);
+	if (prog.a.size == 0 || is_already_sorted(&prog.a))
+		prog.disorder = 0.0;
+	else
+		select_strategy(&prog, &op_count);
+	m = "adaptive";
+	if (prog.strategy == 1)
+		m = "simple";
+	else if (prog.strategy == 2)
+		m = "medium";
+	else if (prog.strategy == 3)
+		m = "complex";
+	if (prog.bench_mode)
+		print_bench_metrics(&prog, op_count, m);
 	free_program(&prog);
 	return (0);
 }

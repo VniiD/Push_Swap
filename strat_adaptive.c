@@ -6,7 +6,7 @@
 /*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 13:02:50 by v                 #+#    #+#             */
-/*   Updated: 2026/07/13 13:03:20 by v                ###   ########.fr       */
+/*   Updated: 2026/07/14 02:06:43 by v                ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -60,24 +60,14 @@ static void	normalize_stack_a(t_program *prog, int *sorted)
 
 static void	execute_regime(t_program *prog, int *sorted, long *op_count)
 {
-	if (prog->disorder < 0.2)
-	{
+	if (prog->a.size <= 5)
 		sort_simple(prog, op_count);
-		if (prog->bench_mode)
-			print_bench_metrics(prog, *op_count, "Adaptive / O(n^2)");
-	}
-	else if (prog->disorder >= 0.2 && prog->disorder < 0.5)
-	{
+	else if (prog->disorder < 0.15)
 		sort_medium(prog, sorted, op_count);
-		if (prog->bench_mode)
-			print_bench_metrics(prog, *op_count, "Adaptive / O(n\\sqrt{n})");
-	}
 	else
 	{
 		normalize_stack_a(prog, sorted);
 		sort_complex(prog, op_count);
-		if (prog->bench_mode)
-			print_bench_metrics(prog, *op_count, "Adaptive / O(n log n)");
 	}
 }
 

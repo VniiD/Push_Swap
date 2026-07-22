@@ -3,10 +3,10 @@
 /*                                                        :::      ::::::::   */
 /*   push_swap.h                                        :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
+/*   By: vde-alme <vde-alme@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 12:37:04 by v                 #+#    #+#             */
-/*   Updated: 2026/07/13 13:24:39 by v                ###   ########.fr       */
+/*   Updated: 2026/07/14 16:49:55 by vde-alme         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
@@ -82,5 +82,23 @@ void	sort_simple(t_program *prog, long *op_count);
 void	sort_medium(t_program *prog, int *sorted, long *op_count);
 void	sort_complex(t_program *prog, long *op_count);
 void	sort_adaptive(t_program *prog, long *op_count);
+
+/* utils_medium.c */
+void	sort_temp_array(int *arr, size_t size);
+int		run_forced_medium(t_program *prog, long *op_count);
+
+/* utils_simple.c */
+void	rotate_min_to_top(t_program *prog, size_t min_idx, long *op_count);
+void	sort_three(t_program *prog, long *op_count);
+
+/* utils_split.c */
+char	**ft_split(char const *s, char c);
+
+/* bonus */
+
+int		read_line(char *buffer, size_t max_len);
+int		execute_checker_op(t_program *prog, const char *op);
+void	check_result(t_program *prog);
+
 
 #endif

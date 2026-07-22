@@ -6,20 +6,17 @@
 /*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 12:56:52 by v                 #+#    #+#             */
-/*   Updated: 2026/07/13 14:35:35 by v                ###   ########.fr       */
+/*   Updated: 2026/07/14 04:29:27 by v                ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "push_swap.h"
 
-static size_t	ft_sqrt(size_t n)
+static size_t	get_chunk_size(size_t size)
 {
-	size_t	res;
-
-	res = 1;
-	while (res * res <= n)
-		res++;
-	return (res - 1);
+	if (size <= 100)
+		return (18);
+	return (size / 10);
 }
 
 static size_t	find_max_idx(t_stack *stack)
@@ -44,7 +41,7 @@ static void	push_chunk_to_b(t_program *prog, int *sorted, long *op_count)
 	size_t	total_size;
 	size_t	limit_idx;
 
-	c_size = ft_sqrt(prog->a.size);
+	c_size = get_chunk_size(prog->a.size);
 	total_size = prog->a.size;
 	while (prog->a.size > 0)
 	{

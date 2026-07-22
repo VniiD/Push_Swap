@@ -3,19 +3,23 @@
 /*                                                        :::      ::::::::   */
 /*   writer.c                                           :+:      :+:    :+:   */
 /*                                                    +:+ +:+         +:+     */
-/*   By: v <v@student.42.fr>                        +#+  +:+       +#+        */
+/*   By: vde-alme <vde-alme@student.42.fr>          +#+  +:+       +#+        */
 /*                                                +#+#+#+#+#+   +#+           */
 /*   Created: 2026/07/13 12:48:43 by v                 #+#    #+#             */
-/*   Updated: 2026/07/13 12:49:15 by v                ###   ########.fr       */
+/*   Updated: 2026/07/14 21:07:36 by vde-alme         ###   ########.fr       */
 /*                                                                            */
 /* ************************************************************************** */
 
 #include "push_swap.h"
 
+int	bench_silence = 0;
+
 void	print_op(const char *op)
 {
 	size_t	len;
-
+	
+	if (bench_silence)
+		return ;
 	len = 0;
 	while (op[len])
 		len++;
