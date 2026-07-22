@@ -393,11 +393,4 @@ both learners must understand every part regardless of who wrote it first.)*
 - Community write-ups on 42's "Turk algorithm" / cost-based push_swap
   approaches (background for the complex strategy's target-cost heuristic).
 
-**AI usage disclosure:** *(fill in precisely for your defense — for example:)*
-An AI assistant (Claude) was used to help draft and structure this `README.md`
-from the existing source files and the project subject, and to summarize each
-strategy's behaviour by reading the implementation. All algorithmic code itself
-was written/reviewed by the two learners listed above, who take full
-responsibility for understanding and being able to defend every function. Per
-the subject's AI-usage guidelines, no AI-generated code was merged without
-being read, tested, and discussed by both learners beforehand.
+**AI usage disclosure:** 
